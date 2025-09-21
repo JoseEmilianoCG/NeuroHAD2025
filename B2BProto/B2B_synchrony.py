@@ -2,6 +2,7 @@ from EGG_device1 import EEG
 from EGG_device2 import EEG2
 from bispectrum import bispec
 from timer import timer
+from markers import marker_loop
 
 # Imports for P300
 import multiprocessing
@@ -19,6 +20,8 @@ from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from brainflow.board_shim import BoardShim, BoardIds
+
 # # CODE FOR REAL TIME TEST # #
 
 # # Create a Value data object # #
@@ -26,6 +29,12 @@ import matplotlib.pyplot as plt
 seconds = Value("i", 0)
 counts = Value("i", 0)
 
+# Sampling rate
+sampling_rate = BoardShim.get_sampling_rate(BoardIds.MUSE_2_BOARD.value)
+windsz = int(4 * sampling_rate)
+
+# Marker labels
+labels = {'1':'baseline_start', '2':'shared_start', '3':'individual_start', ' ':'event'}
 
 # # Define Parallel Processes # #
 
@@ -35,12 +44,16 @@ if __name__ == '__main__':
     # Access to Manager to share memory between proccesses and acces dataframe's 
     mgr = Manager()
     #ns = mgr.list()
-    eno1_datach1 = multiprocessing.Array('d', 800)
-    eno1_datach2 = multiprocessing.Array('d', 800)
+    eno1_datach1 = multiprocessing.Array('d', windsz)
+    eno1_datach2 = multiprocessing.Array('d', windsz)
+    eno1_datach3 = multiprocessing.Array('d', windsz)
+    eno1_datach4 = multiprocessing.Array('d', windsz)
 
 
-    eno2_datach1 = multiprocessing.Array('d', 800)
-    eno2_datach2 = multiprocessing.Array('d', 800)
+    eno2_datach1 = multiprocessing.Array('d', windsz)
+    eno2_datach2 = multiprocessing.Array('d', windsz)
+    eno2_datach3 = multiprocessing.Array('d', windsz)
+    eno2_datach4 = multiprocessing.Array('d', windsz)
 
 
 
@@ -53,11 +66,11 @@ if __name__ == '__main__':
     os.mkdir(folder)
 
 
-    for subfolder in ['Raw', 'Processed', 'Figures']:
+    for subfolder in ['Prepro', 'Processed', 'Figures']:
         os.mkdir('{}/{}'.format(folder, subfolder))
 
     #Creación de carpetas para datos de Enophones 2
-    for subfolder2 in ['Raw 2', 'Processed 2', 'Figures 2']:
+    for subfolder2 in ['Prepro 2', 'Processed 2', 'Figures 2']:
         os.mkdir('{}/{}'.format(folder, subfolder2))
 
     # # Create a multiprocessing List # # 
@@ -67,10 +80,10 @@ if __name__ == '__main__':
     # # Start processes # #
 
     process2 = Process(target=timer, args=[seconds, counts, timestamps])
-    q = Process(target=EEG, args=[seconds, folder, eno1_datach1, eno1_datach2])
-    q2 = Process(target=EEG2, args=[seconds, folder, eno2_datach1, eno2_datach2])
-    q3 = Process(target=bispec, args=[eno1_datach1, eno1_datach2, eno2_datach1, eno2_datach2, seconds, folder])
-
+    q = Process(target=EEG, args=[seconds, folder, eno1_datach1, eno1_datach2, eno1_datach3, eno1_datach4])
+    q2 = Process(target=EEG2, args=[seconds, folder, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4])
+    q3 = Process(target=bispec, args=[eno1_datach1, eno1_datach2, eno1_datach3, eno1_datach4, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4, seconds, folder])
+    q4 = Process(target=marker_loop, args=(f'{folder}/markers.csv', labels), daemon=True).start()
 
     process2.start()
     q.start()
@@ -125,11 +138,12 @@ if __name__ == '__main__':
     
     # The following for loop iterates over all features, and removes outliers depending on the statistical method used.
     # It reads the files saved in the "Raw" folder, and only reads .CSV files, to outputt a .CSV file in "Processed" folder.
-    for df_name in os.listdir('{}/Raw/'.format(folder)):
+    for df_name in os.listdir('{}/Prepro/'.format(folder)):
         if df_name[-4:] == '.csv' and df_name[:4] != 'file':
             df_name = df_name[:-4]
-            df_raw = pd.read_csv('{}/Raw/{}.csv'.format(folder, df_name), index_col=0)
+            df_raw = pd.read_csv('{}/Prepro/{}.csv'.format(folder, df_name), index_col=0).drop(['board_ts','unix_ts'],axis=1)
             df_processed = remove_outliers(df_raw.apply(pd.to_numeric, errors='coerce').dropna(axis=0).reset_index(drop=True), 'quantile')
+
             
             # The processed DataFrame is then exported to the "Processed" folder, and plotted.
             df_processed.to_csv('{}/Processed/{}_processed.csv'.format(folder, df_name))
@@ -138,11 +152,14 @@ if __name__ == '__main__':
             # The plot of the processed DataFrame is saved in the "Figures" folder.
             plt.savefig('{}/Figures/{}_plot.png'.format(folder, df_name))
 
-    for df_name2 in os.listdir('{}/Raw 2/'.format(folder)):
+    for df_name2 in os.listdir('{}/Prepro 2/'.format(folder)):
         if df_name2[-4:] == '.csv' and df_name2[:4] != 'file':
             df_name2 = df_name2[:-4]
-            df_raw2 = pd.read_csv('{}/Raw 2/{}.csv'.format(folder, df_name2), index_col=0)
+            # Uncomment for muse 2
+            # df_raw2 = pd.read_csv('{}/Prepro 2/{}.csv'.format(folder, df_name2), index_col=0).drop(['board_ts','unix_ts'],axis=1)
+            df_raw2 = pd.read_csv('{}/Prepro 2/{}.csv'.format(folder, df_name2), index_col=0)[['Fz', 'C3', 'Cz', 'C4']] # Synthetic only
             df_processed2 = remove_outliers(df_raw2.apply(pd.to_numeric, errors='coerce').dropna(axis=0).reset_index(drop=True), 'quantile')
+
             
             # The processed DataFrame is then exported to the "Processed" folder, and plotted.
             df_processed2.to_csv('{}/Processed 2/{}_processed2.csv'.format(folder, df_name2))

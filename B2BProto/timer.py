@@ -17,7 +17,7 @@ def timer(second, count, timestamps):
             # (should be approx. 1 second)
             second.value = int(time.time() - time_start)
             count.value = 0
-            if(second.value == 21):
+            if(second.value == 50): #og 21
                 return
             print(second.value, end="\r")
         # Once we stored all the info and make the calculations, we sleep the script for
