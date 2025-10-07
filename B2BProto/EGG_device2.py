@@ -14,19 +14,19 @@ def pad_or_trim(seq, target_len, pad_value=0.0):
     return [pad_value] * (target_len - m) + list(seq)
 
 # # CODE FOR EEG # #
-def EEG2(second, folder, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4):
+def EEG2(second, folder, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4, totaltime):
     # The following object will save parameters to connect with the EEG.
     BoardShim.enable_dev_board_logger()
     params = BrainFlowInputParams()
 
     # MAC Adress is the only required parameters for ENOPHONEs
     #params.mac_address = 'f4:0e:11:75:75:ce'
-    # params.serial_number = 'Muse-06D3'
+    # params.serial_number = 'Muse-070E'#'Muse-06D3'#'
 
     # Relevant board IDs available:
     #board_id = BoardIds.ENOPHONE_BOARD.value # (37)
     board_id = BoardIds.SYNTHETIC_BOARD.value
-    # board_id = BoardIds.MUSE_2_BOARD # (-1)
+    # board_id = BoardIds.MUSE_2_BOARD.value # (-1)
     # board_id = BoardIds.CYTON_BOARD.value # (0)
 
     # Relevant variables are obtained from the current EEG.
@@ -60,6 +60,15 @@ def EEG2(second, folder, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4)
             # Empty DataFrames are created for raw data.
             df_clean = pd.DataFrame(columns=channel_names + ['board_ts','unix_ts'])
             df_raw = pd.DataFrame(columns=channel_names + ['board_ts','unix_ts'])
+
+            board_ts = data[ts_ch]  # timestamp de BrainFlow (por muestra)
+            unix_ts = t_pull - (len(board_ts)-1)/sampling_rate + np.arange(len(board_ts))/sampling_rate
+
+            df_raw['board_ts']  = board_ts
+            df_raw['unix_ts']   = unix_ts
+            df_clean['board_ts'] = board_ts
+            df_clean['unix_ts']  = unix_ts
+
 
             # The total number of EEG channels is looped to obtain MV for each channel, and
             # thus saved it on the corresponding columns of the respective DataFrame.
@@ -118,7 +127,7 @@ def EEG2(second, folder, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4)
             # Graph2(board)
             with second.get_lock():
                 # When seconds reach the value, we exit the functions.
-                if(second.value == 50):
+                if(second.value == totaltime):
                     return
 
     except KeyboardInterrupt:

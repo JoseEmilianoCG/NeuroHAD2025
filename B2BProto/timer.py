@@ -3,7 +3,7 @@ import time
 # This function is the countup timer, the count is set to 0 before the script
 # waits for a second, otherwise the beep will sound several times before the second 
 # changes.
-def timer(second, count, timestamps):
+def timer(second, count, timestamps, totaltime):
     # First we initialize a variable that will contain the moment the timer began and 
     # we store this in the timestamps list that will be stored in a CSV.    
     time_start = time.time()
@@ -17,7 +17,7 @@ def timer(second, count, timestamps):
             # (should be approx. 1 second)
             second.value = int(time.time() - time_start)
             count.value = 0
-            if(second.value == 50): #og 21
+            if(second.value == totaltime): #og 21
                 return
             print(second.value, end="\r")
         # Once we stored all the info and make the calculations, we sleep the script for

@@ -3,14 +3,13 @@ from EGG_device2 import EEG2
 from bispectrum import bispec
 from timer import timer
 from markers import marker_loop
+from neuro_dashboard import run_dash, push, shutdown
 
 # Imports for P300
 import multiprocessing
-from multiprocessing import Process, Value, Manager
+from multiprocessing import Queue, Process, Value, Manager
 
 import numpy as np
-import pandas as pd
-from datetime import datetime
 from colorama import Fore, Style
 import scipy.stats as stats
 
@@ -22,16 +21,22 @@ import matplotlib.pyplot as plt
 
 from brainflow.board_shim import BoardShim, BoardIds
 
-# # CODE FOR REAL TIME TEST # #
+# # CODE FOR REAL TIME TEST # #99
 
 # # Create a Value data object # #
 # This object can store a single integer and share it across multiple parallel processes
 seconds = Value("i", 0)
 counts = Value("i", 0)
 
+# Time parameters
+basaltime = 30
+totaltime = 600
+sleeptime = 2
+
 # Sampling rate
 sampling_rate = BoardShim.get_sampling_rate(BoardIds.MUSE_2_BOARD.value)
-windsz = int(4 * sampling_rate)
+windsz = int(sleeptime * sampling_rate)
+
 
 # Marker labels
 labels = {'1':'baseline_start', '2':'shared_start', '3':'individual_start', ' ':'event'}
@@ -55,6 +60,8 @@ if __name__ == '__main__':
     eno2_datach3 = multiprocessing.Array('d', windsz)
     eno2_datach4 = multiprocessing.Array('d', windsz)
 
+    dash_q = Queue()
+
 
 
     # # Define the data folder # #
@@ -62,7 +69,7 @@ if __name__ == '__main__':
     subject_ID, repetition_num = input('Please enter the subject ID and the number of repetition: ').split(' ')
     subject_ID = '0' + subject_ID if int(subject_ID) < 10 else subject_ID
     repetition_num = '0' + repetition_num if int(repetition_num) < 10 else repetition_num
-    folder = 'S{}R{}_{}'.format(subject_ID, repetition_num, datetime.now().strftime("%d%m%Y_%H%M"))
+    folder = 'Outputs\S{}R{}_{}'.format(subject_ID, repetition_num, datetime.now().strftime("%d%m%Y_%H%M"))
     os.mkdir(folder)
 
 
@@ -75,26 +82,56 @@ if __name__ == '__main__':
 
     # # Create a multiprocessing List # # 
     # This list will store the seconds where a beep was played
-    timestamps = multiprocessing.Manager().list()
+    timestamps = mgr.list()
 
     # # Start processes # #
 
-    process2 = Process(target=timer, args=[seconds, counts, timestamps])
-    q = Process(target=EEG, args=[seconds, folder, eno1_datach1, eno1_datach2, eno1_datach3, eno1_datach4])
-    q2 = Process(target=EEG2, args=[seconds, folder, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4])
-    q3 = Process(target=bispec, args=[eno1_datach1, eno1_datach2, eno1_datach3, eno1_datach4, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4, seconds, folder])
-    q4 = Process(target=marker_loop, args=(f'{folder}/markers.csv', labels), daemon=True).start()
+    p_dash = Process(
+        target=run_dash,
+        args=(dash_q,),
+        kwargs=dict(port=8051, window_sec=60, xmin=30, title='Impacto de la Lectura Compartida en Sincronización Biométrica y Conexión Emocional'),
+        daemon=True
+    )
+    p_dash.start()
+    process2 = Process(target=timer, args=[seconds, counts, timestamps, totaltime])
+    q = Process(target=EEG, args=[seconds, folder, eno1_datach1, eno1_datach2, eno1_datach3, eno1_datach4, totaltime])
+    q2 = Process(target=EEG2, args=[seconds, folder, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4, totaltime])
+    q3 = Process(target=bispec, args=[eno1_datach1, eno1_datach2, eno1_datach3, eno1_datach4, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4, seconds, basaltime, totaltime, sleeptime, folder, dash_q])
+    q4 = Process(target=marker_loop, args=(f'{folder}/markers.csv', labels), daemon=True)
 
-    process2.start()
-    q.start()
-    q2.start()
-    q3.start()
 
 
-    process2.join()
-    q.join()
-    q2.join()
-    q3.join()
+    # process2.start()
+    # q.start()
+    # q2.start()
+    # q3.start()
+    # q4.start()
+
+
+    # process2.join()
+    # q.join()
+    # q2.join()
+    # q3.join()
+
+    try:
+        process2.start()
+        q.start()
+        q2.start()
+        q3.start()
+        q4.start()
+
+        process2.join()
+        q.join()
+        q2.join()
+        q3.join()
+    finally:
+        # Cierre limpio del dashboard (y kill de respaldo si siguiera vivo)
+        shutdown(dash_q)
+        try:
+            if p_dash.is_alive():
+                p_dash.terminate()
+        except:
+            pass
 
 
     # # DATA STORAGE SECTION # #

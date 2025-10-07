@@ -8,3 +8,6 @@ pandas
 colorama
 matplotlib
 scipy
+scikit-learn
+plotly
+dash
