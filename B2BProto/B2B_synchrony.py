@@ -13,7 +13,7 @@ import numpy as np
 from colorama import Fore, Style
 import scipy.stats as stats
 
-# Imports for OpenBCI
+# Imports for OpenBC
 import os
 from datetime import datetime
 import pandas as pd

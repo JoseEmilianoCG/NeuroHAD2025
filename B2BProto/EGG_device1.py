@@ -3,7 +3,6 @@ import numpy as np
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds, LogLevels
 from brainflow.data_filter import DataFilter, DetrendOperations
 import time
-from plotting import Graph
 
 def pad_or_trim(seq, target_len, pad_value=0.0):
     m = len(seq)
