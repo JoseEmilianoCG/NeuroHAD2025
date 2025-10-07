@@ -66,19 +66,32 @@ if __name__ == '__main__':
 
     # # Define the data folder # #
     # The name of the folder is defined depending on the user's input
+    # --- Solicitud de sujeto y repetición ---
     subject_ID, repetition_num = input('Please enter the subject ID and the number of repetition: ').split(' ')
-    subject_ID = '0' + subject_ID if int(subject_ID) < 10 else subject_ID
-    repetition_num = '0' + repetition_num if int(repetition_num) < 10 else repetition_num
-    folder = 'Outputs\S{}R{}_{}'.format(subject_ID, repetition_num, datetime.now().strftime("%d%m%Y_%H%M"))
-    os.mkdir(folder)
+    subject_ID = f'{int(subject_ID):02d}'
+    repetition_num = f'{int(repetition_num):02d}'
 
+    # --- Ruta base absoluta (carpeta donde está este script) ---
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUTS_DIR = os.path.join(BASE_DIR, 'Outputs')
 
+    # Crea Outputs si no existe
+    os.makedirs(OUTPUTS_DIR, exist_ok=True)
+
+    # --- Carpeta del sujeto ---
+    folder_name = f"S{subject_ID}R{repetition_num}_{datetime.now().strftime('%d%m%Y_%H%M')}"
+    folder = os.path.join(OUTPUTS_DIR, folder_name)
+
+    # Crea carpeta principal del sujeto
+    os.makedirs(folder, exist_ok=True)
+
+    # --- Subcarpetas principales ---
     for subfolder in ['Prepro', 'Processed', 'Figures']:
-        os.mkdir('{}/{}'.format(folder, subfolder))
+        os.makedirs(os.path.join(folder, subfolder), exist_ok=True)
 
-    #Creación de carpetas para datos de Enophones 2
+    # --- Subcarpetas de Enophones 2 ---
     for subfolder2 in ['Prepro 2', 'Processed 2', 'Figures 2']:
-        os.mkdir('{}/{}'.format(folder, subfolder2))
+        os.makedirs(os.path.join(folder, subfolder2), exist_ok=True)
 
     # # Create a multiprocessing List # # 
     # This list will store the seconds where a beep was played
