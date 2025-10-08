@@ -7,4 +7,3 @@ scipy
 scikit-learn
 plotly
 dash
-msvcrt

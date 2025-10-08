@@ -280,7 +280,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                         },
                         children=[
                             html.Div(
-                                "Spiderplot de bandas",
+                                "Métricas",
                                 style={
                                     "opacity": 0.85,
                                     "padding": "4px 8px",

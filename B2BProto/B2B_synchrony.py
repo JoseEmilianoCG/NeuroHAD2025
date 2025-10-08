@@ -29,8 +29,8 @@ seconds = Value("i", 0)
 counts = Value("i", 0)
 
 # Time parameters
-basaltime = 30
-totaltime = 600
+basaltime = 180
+totaltime = 420
 sleeptime = 2
 
 # Sampling rate
@@ -206,8 +206,8 @@ if __name__ == '__main__':
         if df_name2[-4:] == '.csv' and df_name2[:4] != 'file':
             df_name2 = df_name2[:-4]
             # Uncomment for muse 2
-            # df_raw2 = pd.read_csv('{}/Prepro 2/{}.csv'.format(folder, df_name2), index_col=0).drop(['board_ts','unix_ts'],axis=1)
-            df_raw2 = pd.read_csv('{}/Prepro 2/{}.csv'.format(folder, df_name2), index_col=0)[['Fz', 'C3', 'Cz', 'C4']] # Synthetic only
+            df_raw2 = pd.read_csv('{}/Prepro 2/{}.csv'.format(folder, df_name2), index_col=0).drop(['board_ts','unix_ts'],axis=1)
+            #df_raw2 = pd.read_csv('{}/Prepro 2/{}.csv'.format(folder, df_name2), index_col=0)[['Fz', 'C3', 'Cz', 'C4']] # Synthetic only
             df_processed2 = remove_outliers(df_raw2.apply(pd.to_numeric, errors='coerce').dropna(axis=0).reset_index(drop=True), 'quantile')
 
             

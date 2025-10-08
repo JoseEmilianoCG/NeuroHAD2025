@@ -20,7 +20,7 @@ def EEG(second, folder, eno1_datach1, eno1_datach2, eno1_datach3, eno1_datach4, 
 
     # MAC Adress is the only required parameters for ENOPHONEs
     #params.mac_address = 'f4:0e:11:75:75:a5'
-    params.serial_number = 'Muse-E215'#'Muse-023B' #'Muse-06D3'
+    params.serial_number = 'Muse-023B'#'Muse-E215'# #'Muse-06D3'
 
     # Relevant board IDs available:
     #board_id = BoardIds.ENOPHONE_BOARD.value # (37)

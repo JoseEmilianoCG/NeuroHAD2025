@@ -7,6 +7,7 @@ from brainflow.data_filter import DataFilter, WindowOperations
 from neuro_dashboard import push
 from sklearn.preprocessing import MinMaxScaler
 import itertools
+import math
 
 def bandpower(data, fs, fmin, fmax, nfft, ovlap):
     # print(fs, fmin, fmax, nfft, ovlap)
@@ -55,6 +56,16 @@ def trim_percentiles(series, low=0.5, high=95):
     q_low, q_high = np.percentile(series, [low, high])
     return series[(series >= q_low) & (series <= q_high)]
 
+def sigmoid_scale_df(result_df, ref_df, k=1.5):
+    scaled_df = pd.DataFrame(index=result_df.index)
+    for col in result_df.columns:
+        mean = ref_df[col].mean()
+        std = ref_df[col].std()
+        z = (result_df[col] - mean) / (std + 1e-8)
+        scaled_df[col] = 1 / (1 + np.exp(-k * z))
+    return scaled_df
+
+
 
 # Finally, for both processes to run, this condition has to be met. Which is met
 # if you run the script.
@@ -77,6 +88,7 @@ def bispec(
     try:
         eeg_ref_list1 = []
         eeg_ref_list2 = []
+        metricscols = ['Asym1','Asym2','Att1','Att2','Rel1','Rel2','Act1','Act2','Inv1','Inv2']
         bispectrum_ref_list = []
         ref_taken = False
         nfft = 256 * sleeptime
@@ -174,6 +186,14 @@ def bispec(
             beta_limit = (29 * len(df_bispec)) // 128
             gamma_limit = (50 * len(df_bispec)) // 128
 
+            bands = {
+                'Delta': (0, delta_limit),
+                'Theta': (delta_limit, theta_limit),
+                'Alpha': (theta_limit, alpha_limit),
+                'Beta':  (alpha_limit, beta_limit),
+                'Gamma': (beta_limit, gamma_limit)
+            }
+
 
             cal_written = False
             plot = False
@@ -200,26 +220,25 @@ def bispec(
                 eeg_ref_list2.append(pd.DataFrame(procdata2.T))
 
 
-                delta = df_bispec[['AF7-AF7','AF8-AF8']].iloc[0:delta_limit, :].mean(axis=0).mean()
-                theta = df_bispec[['AF7-AF7','AF8-AF8']].iloc[delta_limit:theta_limit, :].mean(axis=0).mean()
-                alpha = df_bispec[['AF7-AF7','AF8-AF8']].iloc[theta_limit:alpha_limit, :].mean(axis=0).mean()
-                beta = df_bispec[['AF7-AF7','AF8-AF8']].iloc[alpha_limit:beta_limit, :].mean(axis=0).mean()
-                gamma = df_bispec[['AF7-AF7','AF8-AF8']].iloc[beta_limit:gamma_limit, :].mean(axis=0).mean()
-                freqs = pd.DataFrame({
-                    'Delta': [float(delta)],
-                    'Theta': [float(theta)],
-                    'Alpha': [float(alpha)],
-                    'Beta':  [float(beta)],
-                    'Gamma': [float(gamma)]
-                })
+                cols = ['AF7-AF7', 'AF8-AF8']
+
+
+
+                # Diccionario para guardar las medias
+                freqs_dict = {}
+
+                for band, (start, end) in bands.items():
+                    # Promedio de cada canal en la banda
+                    means = df_bispec[cols].iloc[start:end].mean(axis=0)
+                    # Renombrar cada columna como "Banda-Canal"
+                    for ch in means.index:
+                        freqs_dict[f"{band}-{ch}"] = means[ch]
+
+                # Convertir a DataFrame con una sola fila
+                freqs = pd.DataFrame([freqs_dict])
                 
 
                 bispectrum_ref_list.append(freqs)
-
-
-
-
-
 
             elif basaltime < sec <= totaltime:
                 if not ref_taken:
@@ -231,130 +250,65 @@ def bispec(
                     nwind = eeg_ref_df1.shape[0] // nfft
                     # print('Refmat windows: ', nwind)
                     refmat_arr = np.zeros([nwind,10])
-                    cols = ['Asym1','Asym2','Att1','Att2','Rel1','Rel2','Act1','Act2','Inv1','Inv2']
-                    refmat_df = pd.DataFrame(refmat_arr, columns=cols)
+                    metrics_ref_df = pd.DataFrame(refmat_arr, columns=metricscols)
 
 
                     for n in range(nwind):
-                        refmat_df.loc[n,'Asym1'] = alphaasymmetry(eeg_ref_df1.iloc[n*nfft:(n+1)*nfft,1], eeg_ref_df1.iloc[n*nfft:(n+1)*nfft,2], 256, nfft)
-                        refmat_df.loc[n,'Asym2'] = alphaasymmetry(eeg_ref_df2.iloc[n*nfft:(n+1)*nfft,1], eeg_ref_df2.iloc[n*nfft:(n+1)*nfft,2], 256, nfft)
-                        refmat_df.loc[n, ['Att1','Rel1','Act1','Inv1']] = multimetric(
+                        metrics_ref_df.loc[n,'Asym1'] = alphaasymmetry(eeg_ref_df1.iloc[n*nfft:(n+1)*nfft,1], eeg_ref_df1.iloc[n*nfft:(n+1)*nfft,2], 256, nfft)
+                        metrics_ref_df.loc[n,'Asym2'] = alphaasymmetry(eeg_ref_df2.iloc[n*nfft:(n+1)*nfft,1], eeg_ref_df2.iloc[n*nfft:(n+1)*nfft,2], 256, nfft)
+                        metrics_ref_df.loc[n, ['Att1','Rel1','Act1','Inv1']] = multimetric(
                             eeg_ref_df1.iloc[n*nfft:(n+1)*nfft], 256, nfft
                         )
-                        refmat_df.loc[n, ['Att2','Rel2','Act2','Inv2']] = multimetric(
+                        metrics_ref_df.loc[n, ['Att2','Rel2','Act2','Inv2']] = multimetric(
                             eeg_ref_df2.iloc[n*nfft:(n+1)*nfft], 256, nfft
                         )
-                    scalers = {}
-                    for col in cols:
-                        print(col)
-                        # trimmed = trim_percentiles(refmat_df[col], 0.5, 95).to_numpy().reshape(-1, 1)
-                        scaler = MinMaxScaler(feature_range=(0,1), clip=True,)
-                        x = np.asarray(refmat_df[[col]], dtype=float)
-                        x = x[np.isfinite(x)]
-                        scaler.fit(x.reshape(-1,1))
-                        scalers[col] = scaler
+                    # scalers = {}
+                    # for col in cols:
+                    #     print(col)
+                    #     # trimmed = trim_percentiles(refmat_df[col], 0.5, 95).to_numpy().reshape(-1, 1)
+                    #     scaler = MinMaxScaler(feature_range=(0,1), clip=True,)
+                    #     x = np.asarray(refmat_df[[col]], dtype=float)
+                    #     x = x[np.isfinite(x)]
+                    #     scaler.fit(x.reshape(-1,1))
+                    #     scalers[col] = scaler
 
-                    bispecscaler = {}
-                    for col in bispectrum_ref_df.columns:
-                        scaler = MinMaxScaler(feature_range=(0,1), clip=True)
-                        x = np.asarray(bispectrum_ref_df[[col]], dtype=float)
-                        x = x[np.isfinite(x)]
-                        trimmed = trim_percentiles(x, 0.5, 95).reshape(-1, 1)
-                        scaler.fit(trimmed)
-                        bispecscaler[col] = scaler
 
                     ref_taken = True
 
                 path_cal = f"{folder}/Calibration_data.csv"
-            #     if os.path.exists(path_cal):
-            #         sumdf = pd.read_csv(path_cal)
-            #         sumdf.drop('Time', axis=1)
-            #         arrange3 = (
-            #             sumdf.apply(pd.to_numeric, errors="coerce")
-            #             .dropna(axis=0)
-            #             .reset_index(drop=True)
-            #         )
-            #         arrange3.to_csv(f"{folder}/Calibration_data_clean.csv", index=False)
 
-            #         eyes_open = pd.read_csv(
-            #             "{}/Calibration_data_clean.csv".format(folder)
-            #         )
+            
+            result_dict = {}
+            cols = ['AF7-AF7', 'AF8-AF8']
 
-            #         df_eo = (
-            #             eyes_open.apply(pd.to_numeric, errors="coerce")
-            #             .dropna()
-            #             .reset_index(drop=True)
-            #         )
+            for band, (start, end) in bands.items():
+                # Calcular promedio por canal en ese rango
+                means = df_bispec[cols].iloc[start:end].mean(axis=0)
+                # Renombrar cada valor con formato "Banda-Canal"
+                for ch in means.index:
+                    result_dict[f"{band}-{ch}"] = means[ch]
 
-            #         df_eo2 = df_eo.rename(columns={f"COMB{k}": k for k in range(16)})
+            # Convertir todo a un DataFrame con una sola fila
+            result_df = pd.DataFrame([result_dict])
+            print(result_df)
 
-
-            #         relevant_keys = np.arange(0, len(df_eo), nfft/2)
-            #         df_norm = np.zeros((nfft/2, 16), dtype=float)
-
-            #         for i in range(nfft/2):
-            #             idx = relevant_keys + i
-            #             idx = idx[idx < len(df_eo2)]  # límites
-            #             vals = df_eo2.to_numpy()[idx, :]  # (n_idx x 16)
-            #             df_norm[i, :] = vals.mean(axis=0)  # promedio por combinación
-
-
-            # df_sum = pd.DataFrame(df_norm)
-
-            # df_sum2 = df_sum.rename(
-            #     columns={
-            #         0: "COMB0",
-            #         1: "COMB1",
-            #         2: "COMB2",
-            #         3: "COMB3",
-            #         4: "COMB4",
-            #         5: "COMB5",
-            #         6: "COMB6",
-            #         7: "COMB7",
-            #         8: "COMB8",
-            #         9: "COMB9",
-            #         10: "COMB10",
-            #         11: "COMB11",
-            #         12: "COMB12",
-            #         13: "COMB13",
-            #         14: "COMB14",
-            #         15: "COMB15",
-            #     }
-            # )
-            # df_sub = df_bispec.sub(df_sum2)
-            # df_div = df_sub.div(df_sum2)
-            # print(df_div)
-
-            # df_div.to_csv("{}/Bispec_norm.csv".format(folder), mode="a")
-
-
-            df_delta = df_bispec[['AF7-AF7','AF8-AF8']].iloc[0:delta_limit, :].mean(axis=0).mean()
-            df_theta = df_bispec[['AF7-AF7','AF8-AF8']].iloc[delta_limit:theta_limit, :].mean(axis=0).mean()
-            df_alpha = df_bispec[['AF7-AF7','AF8-AF8']].iloc[theta_limit:alpha_limit, :].mean(axis=0).mean()
-            df_beta = df_bispec[['AF7-AF7','AF8-AF8']].iloc[alpha_limit:beta_limit, :].mean(axis=0).mean()
-            df_gamma = df_bispec[['AF7-AF7','AF8-AF8']].iloc[beta_limit:gamma_limit, :].mean(axis=0).mean()
-            print(df_gamma)
-
-            result_df = pd.DataFrame({
-                    'Delta': [float(df_delta)],
-                    'Theta': [float(df_theta)],
-                    'Alpha': [float(df_alpha)],
-                    'Beta':  [float(df_beta)],
-                    'Gamma': [float(df_gamma)]
-                })
-
-            # Concatenate the individual DataFrames horizontally (column-wise)
-            # result_df = pd.concat(
-            #     [df_delta, df_theta, df_alpha, df_beta, df_gamma], axis=0
-            # )
 
             # Realtime plot
             if ref_taken:
-                comb1s = bispecscaler['Delta'].transform([[df_delta]])
-                comb2s = bispecscaler['Theta'].transform([[df_theta]])
-                comb3s = bispecscaler['Alpha'].transform([[df_alpha]])
-                comb4s = bispecscaler['Beta'].transform([[df_beta]])
-                comb5s = bispecscaler['Gamma'].transform([[df_gamma]])
+                bands_order = ['Delta', 'Theta', 'Alpha', 'Beta', 'Gamma']
+
+                scaled_bispec_df = sigmoid_scale_df(result_df, bispectrum_ref_df, k=1)
+
+                # Promediar por banda
+                band_means = {}
+                for band in bands_order:
+                    band_cols = [c for c in scaled_bispec_df.columns if c.startswith(f"{band}-")]
+                    if band_cols:
+                        band_means[band] = float(scaled_bispec_df[band_cols].mean(axis=1).iloc[0])
+
+
+                # 3) DataFrame final con columnas en el orden deseado
+                final_df = pd.DataFrame([band_means], columns=bands_order)
 
 
                 asym1 = alphaasymmetry(procdata1[1], procdata1[2], 256, nfft)
@@ -362,40 +316,55 @@ def bispec(
                 att1, rel1, act1, inv1 = multimetric(procdata1, 256, nfft)
                 att2, rel2, act2, inv2 = multimetric(procdata2, 256, nfft)
 
-                asym1s = scalers['Asym1'].transform([[asym1]])[0][0]
-                asym2s = scalers['Asym2'].transform([[asym2]])[0][0]
-                att1s = scalers['Att1'].transform([[att1]])[0][0]
-                att2s = scalers['Att2'].transform([[att2]])[0][0]
-                rel1s = scalers['Rel1'].transform([[rel1]])[0][0]
-                rel2s = scalers['Rel2'].transform([[rel2]])[0][0]
-                act1s = scalers['Act1'].transform([[act1]])[0][0]
-                act2s = scalers['Act1'].transform([[act2]])[0][0]
-                inv1s = scalers['Inv1'].transform([[inv1]])[0][0]
-                inv2s = scalers['Inv2'].transform([[inv2]])[0][0]
+                metrics_result_df = pd.DataFrame({
+                    'Asym1': [asym1],
+                    'Asym2': [asym2],
+                    'Att1': [att1],
+                    'Att2': [att2],
+                    'Rel1': [rel1],
+                    'Rel2': [rel2],
+                    'Act1': [act1],
+                    'Act2': [act2],
+                    'Inv1': [inv1],
+                    'Inv2': [inv2]
+                })
+                scaled_metrics_df = sigmoid_scale_df(metrics_result_df, metrics_ref_df, k=1)
+
+
+                # asym1s = scalers['Asym1'].transform([[asym1]])[0][0]
+                # asym2s = scalers['Asym2'].transform([[asym2]])[0][0]
+                # att1s = scalers['Att1'].transform([[att1]])[0][0]
+                # att2s = scalers['Att2'].transform([[att2]])[0][0]
+                # rel1s = scalers['Rel1'].transform([[rel1]])[0][0]
+                # rel2s = scalers['Rel2'].transform([[rel2]])[0][0]
+                # act1s = scalers['Act1'].transform([[act1]])[0][0]
+                # act2s = scalers['Act1'].transform([[act2]])[0][0]
+                # inv1s = scalers['Inv1'].transform([[inv1]])[0][0]
+                # inv2s = scalers['Inv2'].transform([[inv2]])[0][0]
 
 
                 radardict = {
                     "Participante 1": {
-                        "Atención": att1s,
-                        "Relajación": rel1s,
-                        "Activación": act1s,
-                        "Emoción Positiva": 1- asym1s,
-                        "Involucramiento":inv1s
+                        "Atención": scaled_metrics_df['Att1'],
+                        "Relajación": scaled_metrics_df['Rel1'],
+                        "Activación": scaled_metrics_df['Act1'],
+                        "Emoción Positiva": 1- scaled_metrics_df['Asym1'],
+                        "Involucramiento":scaled_metrics_df['Inv1']
                     },
                     "Participante 2": {
-                        "Atención": att2s,
-                        "Relajación": rel2s,
-                        "Activación": act2s,
-                        "Emoción Positiva": 1 - asym2s,
-                        "Involucramiento": inv2s
+                        "Atención": scaled_metrics_df['Att2'],
+                        "Relajación": scaled_metrics_df['Rel2'],
+                        "Activación": scaled_metrics_df['Act2'],
+                        "Emoción Positiva": 1- scaled_metrics_df['Asym2'],
+                        "Involucramiento":scaled_metrics_df['Inv2']
                     },
                 }
                 series = {
-                    "Delta": comb1s,
-                    "Theta": comb2s,
-                    "Alpha": comb3s,
-                    "Beta": comb4s,
-                    "Gamma": comb5s,
+                    "Delta": final_df['Delta'],
+                    "Theta": final_df['Theta'],
+                    "Alpha": final_df['Alpha'],
+                    "Beta": final_df['Beta'],
+                    "Gamma": final_df['Gamma'],
                 }
                 push(
                     dash_q,
