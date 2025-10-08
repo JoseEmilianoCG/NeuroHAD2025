@@ -297,7 +297,7 @@ def bispec(
             if ref_taken:
                 bands_order = ['Delta', 'Theta', 'Alpha', 'Beta', 'Gamma']
 
-                scaled_bispec_df = sigmoid_scale_df(result_df, bispectrum_ref_df, k=1)
+                scaled_bispec_df = sigmoid_scale_df(result_df, bispectrum_ref_df, k=1.5)
 
                 # Promediar por banda
                 band_means = {}
@@ -328,7 +328,7 @@ def bispec(
                     'Inv1': [inv1],
                     'Inv2': [inv2]
                 })
-                scaled_metrics_df = sigmoid_scale_df(metrics_result_df, metrics_ref_df, k=1)
+                scaled_metrics_df = sigmoid_scale_df(metrics_result_df, metrics_ref_df, k=1.5)
 
 
                 # asym1s = scalers['Asym1'].transform([[asym1]])[0][0]

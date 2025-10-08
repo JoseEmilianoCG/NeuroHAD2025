@@ -149,7 +149,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                         r=rr,
                         theta=theta,
                         mode="lines+markers",
-                        marker=dict(size=8),
+                        marker=dict(size=6),
                         line=dict(width=3, color=color),
                         fill="toself",
                         fillcolor=fill_col,
@@ -239,18 +239,14 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                             html.Div(
                                 id="lines-avg",
                                 style={
-                                    # Make this block exactly the upper half of the left panel
-                                    "flex": "0 0 50%",
-                                    # Center content both ways
-                                    "display": "flex",
-                                    "alignItems": "center",
-                                    "justifyContent": "center",
-                                    # Big responsive font: clamp between 120px and 420px, scale with viewport width
-                                    "fontSize": "clamp(120px, 28vw, 420px)",
+                                    "textAlign": "center",
                                     "fontWeight": 800,
+                                    "fontSize": "400px",
                                     "lineHeight": "1",
+                                    "padding": "10vh 0 2px 0",
                                     "color": PALETTE["primary"],
                                     "letterSpacing": "-0.5px",
+                                    "minHeight": "40vh",
                                 },
                                 children="—",
                             ),
@@ -261,8 +257,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                                     "flexDirection": "column",
                                     "gap": "6px",
                                     "minHeight": 0,
-                                    # occupy the lower half
-                                    "flex": "1 1 50%",
+                                    "flex": "1 1 auto",
                                     "height": "100%",
                                 },
                                 children=[],

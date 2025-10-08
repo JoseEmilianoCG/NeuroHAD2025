@@ -29,8 +29,8 @@ seconds = Value("i", 0)
 counts = Value("i", 0)
 
 # Time parameters
-basaltime = 180
-totaltime = 420
+basaltime = 10
+totaltime = 330
 sleeptime = 2
 
 # Sampling rate
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     p_dash = Process(
         target=run_dash,
         args=(dash_q,),
-        kwargs=dict(port=8051, window_sec=60, xmin=30, title='Impacto de la Lectura Compartida en Sincronización Biométrica y Conexión Emocional'),
+        kwargs=dict(port=8051, window_sec=60, xmin=60, title='Impacto de la Lectura Compartida en Sincronización Biométrica y Conexión Emocional'),
         daemon=True
     )
     p_dash.start()
@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
 
 
-    # process2.start()
+    # process2.start()71
     # q.start()
     # q2.start()
     # q3.start()
