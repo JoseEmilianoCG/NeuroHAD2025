@@ -176,7 +176,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                         fill="toself",
                         fillcolor=fill_col,
                         name=serie_name,
-                        textfont=dict(size=20),
+                        textfont=dict(size=30),
                         opacity=1.0,
                     )
                 )
@@ -192,7 +192,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                     range=[0, 1.2],
                     tickvals=[0.0, 0.5, 1.0],
                     ticktext=["Bajo", "Medio", "Alto"],
-                    tickfont=dict(size=15),
+                    tickfont=dict(size=20),
                     visible=True,
                     showline=False,
                     gridcolor=PALETTE["grid"],
@@ -201,7 +201,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                 ),
                 angularaxis=dict(
                     gridcolor=PALETTE["grid"],
-                    tickfont=dict(size=16),
+                    tickfont=dict(size=22),
                     # tickpadding=12,  # separación de la circunferencia
                     rotation=90,
                     gridwidth=1.4,
@@ -215,7 +215,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                 yanchor="bottom",
                 bgcolor="rgba(255,255,255,0.0)",
                 borderwidth=0,
-                font=dict(size=20),
+                font=dict(size=30),
             ),
             showlegend=True,
         )
