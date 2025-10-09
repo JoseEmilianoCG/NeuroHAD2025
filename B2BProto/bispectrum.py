@@ -348,15 +348,15 @@ def bispec(
                         "Atención": scaled_metrics_df['Att1'],
                         "Relajación": scaled_metrics_df['Rel1'],
                         "Activación": scaled_metrics_df['Act1'],
-                        "Emoción Positiva": 1- scaled_metrics_df['Asym1'],
-                        "Involucramiento":scaled_metrics_df['Inv1']
+                        "Involucramiento":scaled_metrics_df['Inv1'],
+                        "Emoción<br>Positiva": 1- scaled_metrics_df['Asym1'],
                     },
                     "Participante 2": {
                         "Atención": scaled_metrics_df['Att2'],
                         "Relajación": scaled_metrics_df['Rel2'],
                         "Activación": scaled_metrics_df['Act2'],
-                        "Emoción Positiva": 1- scaled_metrics_df['Asym2'],
-                        "Involucramiento":scaled_metrics_df['Inv2']
+                        "Involucramiento":scaled_metrics_df['Inv2'],
+                        "Emoción<br>Positiva": 1- scaled_metrics_df['Asym2'],
                     },
                 }
                 series = {

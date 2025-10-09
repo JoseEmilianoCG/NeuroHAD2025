@@ -11,29 +11,39 @@ from dash import Dash, dcc, html, Input, Output
 
 PALETTE = {
     "colorway": [
-        "#4C78A8", "#F58518", "#E45756", "#72B7B2",
-        "#54A24B", "#EECA3B", "#B279A2", "#FF9DA6",
-        "#9D755D", "#BAB0AC"
+        "#4C78A8",
+        "#F58518",
+        "#E45756",
+        "#72B7B2",
+        "#54A24B",
+        "#EECA3B",
+        "#B279A2",
+        "#FF9DA6",
+        "#9D755D",
+        "#BAB0AC",
     ],
     "panel": "#FFFFFF",
     "border": "#E9EEF2",
     "primary": "#0D6EFD",
     "subtext": "#6B7280",
     "bg": "#F5F7FA",
-    "grid": "#E5E7EB",
+    "grid": "rgba(0, 0, 0, 0.3)",
     "text": "#111827",
 }
+
 
 def _color_for_index(idx: int) -> str:
     return PALETTE["colorway"][idx % len(PALETTE["colorway"])]
 
+
 def _hex_to_rgba(hex_color: str, alpha: float) -> str:
-    hex_color = hex_color.lstrip('#')
+    hex_color = hex_color.lstrip("#")
     r = int(hex_color[0:2], 16)
     g = int(hex_color[2:4], 16)
     b = int(hex_color[4:6], 16)
     a = max(0.0, min(1.0, float(alpha)))
     return f"rgba({r},{g},{b},{a})"
+
 
 def apply_light_theme(fig: go.Figure):
     fig.update_layout(
@@ -58,22 +68,27 @@ def apply_light_theme(fig: go.Figure):
         mirror=False,
     )
 
+
 def push(q, t, series_dict, metric1=None, metric2=None, radars=None):
     try:
-        q.put_nowait({
-            "type": "data",
-            "t": float(t),
-            "series": dict(series_dict or {}),
-            "radars": dict(radars or {}),
-        })
+        q.put_nowait(
+            {
+                "type": "data",
+                "t": float(t),
+                "series": dict(series_dict or {}),
+                "radars": dict(radars or {}),
+            }
+        )
     except Exception:
         pass
+
 
 def shutdown(q):
     try:
         q.put_nowait({"type": "shutdown"})
     except Exception:
         pass
+
 
 def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=30.0):
     MAX_POINTS = 10000
@@ -85,7 +100,8 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
 
     def ensure_series(name: str):
         if name not in ys:
-            _ = xs[name]; _ = ys[name]
+            _ = xs[name]
+            _ = ys[name]
         if name not in order:
             order.append(name)
 
@@ -121,7 +137,13 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                     for layer, vals in radars.items():
                         radars_state[layer] = dict(vals)
 
-    DEFAULT_CATS = ["Atención", "Relajación", "Activación", "Involucramiento", "Emoción Positiva"]
+    DEFAULT_CATS = [
+        "Atención",
+        "Relajación",
+        "Activación",
+        "Involucramiento",
+        "Emoción<br>Positiva",
+    ]
 
     def make_overlay_radar(state_dict: "OrderedDict[str, dict]") -> go.Figure:
         cats = list(DEFAULT_CATS)
@@ -150,34 +172,53 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                         theta=theta,
                         mode="lines+markers",
                         marker=dict(size=8),
-                        line=dict(width=3, color=color),
+                        line=dict(width=4, color=color),
                         fill="toself",
                         fillcolor=fill_col,
                         name=serie_name,
+                        textfont=dict(size=20),
+                        opacity=1.0,
                     )
                 )
 
         fig.update_layout(
+            margin=dict(l=50, r=50, t=40, b=60),
             polar=dict(
-                domain=dict(x=[0, 1], y=[0, 1]),  # ocupa el panel completo y se centra
+                domain=dict(
+                    x=[0.06, 0.94], y=[0.06, 0.94]
+                ),  # ocupa el panel completo y se centra
                 bgcolor=PALETTE["panel"],
                 radialaxis=dict(
-                    visible=True, showline=False, gridcolor=PALETTE["grid"],
+                    range=[0, 1.2],
+                    tickvals=[0.0, 0.5, 1.0],
+                    ticktext=["Bajo", "Medio", "Alto"],
+                    tickfont=dict(size=15),
+                    visible=True,
+                    showline=False,
+                    gridcolor=PALETTE["grid"],
+                    gridwidth=1.4,
                     # ← ver sección 3 para la escala
                 ),
-                angularaxis=dict(gridcolor=PALETTE["grid"]),
+                angularaxis=dict(
+                    gridcolor=PALETTE["grid"],
+                    tickfont=dict(size=16),
+                    # tickpadding=12,  # separación de la circunferencia
+                    rotation=90,
+                    gridwidth=1.4,
+                ),
             ),
-            legend=dict(                 # leyenda horizontal y centrada
+            legend=dict(  # leyenda horizontal y centrada
                 orientation="h",
-                x=0.5, xanchor="center",
-                y=1.08, yanchor="bottom",
+                x=0.5,
+                xanchor="center",
+                y=1.08,
+                yanchor="bottom",
                 bgcolor="rgba(255,255,255,0.0)",
                 borderwidth=0,
+                font=dict(size=20),
             ),
             showlegend=True,
-            margin=dict(l=16, r=16, t=48, b=24),  # márgenes simétricos
         )
-
 
         apply_light_theme(fig)
         return fig
@@ -199,7 +240,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
         children=[
             html.Div(
                 title,
-                style={"fontWeight": 700, "fontSize": "20px", "color": PALETTE["text"]},
+                style={"fontWeight": 700, "fontSize": "4vh", "color": PALETTE["text"]},
             ),
             # El grid ahora ocupa toda la altura restante del viewport
             html.Div(
@@ -234,6 +275,8 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                                     "padding": "4px 8px",
                                     "background": PALETTE["panel"],
                                     "color": PALETTE["subtext"],
+                                    "fontSize": "3vh",
+                                    "fontWeight": "600",
                                 },
                             ),
                             html.Div(
@@ -246,7 +289,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                                     "alignItems": "center",
                                     "justifyContent": "center",
                                     # Big responsive font: clamp between 120px and 420px, scale with viewport width
-                                    "fontSize": "clamp(120px, 28vw, 420px)",
+                                    "fontSize": "clamp(120px, 22vw, 420px)",
                                     "fontWeight": 800,
                                     "lineHeight": "1",
                                     "color": PALETTE["primary"],
@@ -278,25 +321,31 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                             "border": f"1px solid {PALETTE['border']}",
                             "height": "100%",
                             "minHeight": 0,
-                            "overflow": "hidden",
+                            # "overflow": "hidden",
                             "display": "flex",
                             "flexDirection": "column",
                             "gap": "8px",
                         },
                         children=[
                             html.Div(
-                                "Métricas",
+                                "Estado mental y emocional",
                                 style={
                                     "opacity": 0.85,
                                     "padding": "4px 8px",
                                     "background": PALETTE["panel"],
                                     "color": PALETTE["subtext"],
+                                    "fontSize": "3vh",
+                                    "fontWeight": "600",
                                 },
                             ),
                             dcc.Graph(
                                 id="radar-graph",
                                 config={"displayModeBar": False, "responsive": True},
-                                style={"flex": "1 1 auto", "height": "100%", "width": "100%"},
+                                style={
+                                    "flex": "1 1 auto",
+                                    "height": "100%",
+                                    "width": "100%",
+                                },
                                 figure=make_overlay_radar(radars_state),
                             ),
                         ],
@@ -308,9 +357,11 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
     )
 
     @app.callback(
-        [Output("lines-container", "children"),
-         Output("radar-graph", "figure"),
-         Output("lines-avg", "children")],
+        [
+            Output("lines-container", "children"),
+            Output("radar-graph", "figure"),
+            Output("lines-avg", "children"),
+        ],
         [Input("tick", "n_intervals")],
         prevent_initial_call=False,
     )
@@ -332,11 +383,15 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
             if not len(xs[name]) or not len(ys[name]):
                 continue
 
-            x = list(xs[name]); y = list(ys[name])
+            x = list(xs[name])
+            y = list(ys[name])
             fig = go.Figure()
             fig.add_trace(
                 go.Scatter(
-                    x=x, y=y, mode="lines", name=name,
+                    x=x,
+                    y=y,
+                    mode="lines",
+                    name=name,
                     line=dict(width=2.2, color=_color_for_index(i)),
                     connectgaps=False,
                     hovertemplate="%{x:.2f}s — %{y:.4f}<extra>" + name + "</extra>",
@@ -349,7 +404,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                     left = max(0.0, tmax - max(xmin, float(window_sec)))
                 fig.update_xaxes(range=[left, tmax])
 
-            is_last = (i == len(names) - 1)
+            is_last = i == len(names) - 1
             fig.update_xaxes(
                 showticklabels=is_last,
                 title_text=("Tiempo (s)" if is_last else None),
@@ -375,7 +430,9 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
 
         radar_fig = make_overlay_radar(radars_state)
         latest_vals = [ys[nm][-1] for nm in names if len(ys[nm])]
-        avg_text = f"{int(np.round(np.mean(latest_vals)*100))}%" if latest_vals else "—"
+        avg_text = (
+            f"{int(np.round(np.mean(latest_vals) * 100))}%" if latest_vals else "—"
+        )
         return children, radar_fig, avg_text
 
     app.run(host="127.0.0.1", port=port, debug=False)
