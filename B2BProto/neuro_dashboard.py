@@ -171,25 +171,25 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                         r=rr,
                         theta=theta,
                         mode="lines+markers",
-                        marker=dict(size=8),
+                        marker=dict(size=15),
                         line=dict(width=4, color=color),
                         fill="toself",
                         fillcolor=fill_col,
                         name=serie_name,
-                        textfont=dict(size=30),
+                        textfont=dict(size=40),
                         opacity=1.0,
                     )
                 )
 
         fig.update_layout(
-            margin=dict(l=50, r=50, t=40, b=60),
+            margin=dict(l=85, r=60, t=40, b=60),
             polar=dict(
                 domain=dict(
-                    x=[0.06, 0.94], y=[0.06, 0.94]
+                    x=[0.06, 0.90], y=[0.06, 0.94]
                 ),  # ocupa el panel completo y se centra
                 bgcolor=PALETTE["panel"],
                 radialaxis=dict(
-                    range=[0, 1.2],
+                    range=[0, 1.05],
                     tickvals=[0.0, 0.5, 1.0],
                     ticktext=["Bajo", "Medio", "Alto"],
                     tickfont=dict(size=20),
@@ -201,7 +201,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                 ),
                 angularaxis=dict(
                     gridcolor=PALETTE["grid"],
-                    tickfont=dict(size=22),
+                    tickfont=dict(size=25),
                     # tickpadding=12,  # separación de la circunferencia
                     rotation=90,
                     gridwidth=1.4,
@@ -240,7 +240,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
         children=[
             html.Div(
                 title,
-                style={"fontWeight": 700, "fontSize": "4vh", "color": PALETTE["text"]},
+                style={"fontWeight": 400, "fontSize": "4vh", "color": PALETTE["text"], "text-align":"center"},
             ),
             # El grid ahora ocupa toda la altura restante del viewport
             html.Div(
@@ -275,8 +275,9 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                                     "padding": "4px 8px",
                                     "background": PALETTE["panel"],
                                     "color": PALETTE["subtext"],
-                                    "fontSize": "3vh",
-                                    "fontWeight": "600",
+                                    "fontSize": "4vh",
+                                    "fontWeight": "100",
+                                    "text-align": "center"
                                 },
                             ),
                             html.Div(
@@ -334,8 +335,9 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                                     "padding": "4px 8px",
                                     "background": PALETTE["panel"],
                                     "color": PALETTE["subtext"],
-                                    "fontSize": "3vh",
-                                    "fontWeight": "600",
+                                    "fontSize": "4vh",
+                                    "fontWeight": "100",
+                                    "text-align": "center"
                                 },
                             ),
                             dcc.Graph(

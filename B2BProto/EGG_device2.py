@@ -13,19 +13,20 @@ def pad_or_trim(seq, target_len, pad_value=0.0):
     return [pad_value] * (target_len - m) + list(seq)
 
 # # CODE FOR EEG # #
-def EEG2(second, folder, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4, totaltime):
+def EEG2(second, folder, eno2_datach1, eno2_datach2, eno2_datach3, eno2_datach4, totaltime, muse_id):
+    print(muse_id)
     # The following object will save parameters to connect with the EEG.
     BoardShim.enable_dev_board_logger()
     params = BrainFlowInputParams()
 
     # MAC Adress is the only required parameters for ENOPHONEs
     #params.mac_address = 'f4:0e:11:75:75:ce'
-    #params.serial_number = 'Muse-E215'#'Muse-070E'##'
+    params.serial_number = muse_id #'Muse-E215'#'Muse-070E'##'
 
     # Relevant board IDs available:
     #board_id = BoardIds.ENOPHONE_BOARD.value # (37)
-    board_id = BoardIds.SYNTHETIC_BOARD.value
-    #board_id = BoardIds.MUSE_2_BOARD.value # (-1)
+    #board_id = BoardIds.SYNTHETIC_BOARD.value
+    board_id = BoardIds.MUSE_2_BOARD.value # (-1)
     # board_id = BoardIds.CYTON_BOARD.value # (0)
 
     # Relevant variables are obtained from the current EEG.

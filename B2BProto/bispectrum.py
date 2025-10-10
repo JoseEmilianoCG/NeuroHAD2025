@@ -344,14 +344,14 @@ def bispec(
 
 
                 radardict = {
-                    "Emilio": {
+                    "Adulto": {
                         "Atención": scaled_metrics_df['Att1'],
                         "Relajación": scaled_metrics_df['Rel1'],
                         "Activación": scaled_metrics_df['Act1'],
                         "Involucramiento":scaled_metrics_df['Inv1'],
                         "Emoción<br>Positiva": 1- scaled_metrics_df['Asym1'],
                     },
-                    "Laura": {
+                    "Niño": {
                         "Atención": scaled_metrics_df['Att2'],
                         "Relajación": scaled_metrics_df['Rel2'],
                         "Activación": scaled_metrics_df['Act2'],
