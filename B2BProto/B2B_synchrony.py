@@ -29,8 +29,8 @@ seconds = Value("i", 0)
 counts = Value("i", 0)
 
 # Time parameters
-basaltime = 315
-totaltime = 920
+basaltime = 300
+totaltime = 930
 sleeptime = 2
 
 # Sampling rate
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     # --- Información adicional del experimento ---
     print("\n=== Información adicional del experimento ===")
     muse_code1 = 'Muse-' + str(input("ID de Muse #1, a ser usado por el adulto (preferentemennte, 023B o 06D3): ")).upper()
-    muse_code2 = 'Muse-' + str(input("ID de Muse #2, a ser usado por el infante (preferentemennte, 070E o E215):")).upper()
+    muse_code2 = 'Muse-' + str(input("ID de Muse #2, a ser usado por el infante (preferentemennte, 070E o E215): ")).upper()
     relationship = input("Relación entre los sujetos (e.g. Padre-hijo, Madre-hijo, Amigos, Desconocidos, Pareja, etc.): ")
 
     # --- Guardar metadatos en CSV como respaldo ---
