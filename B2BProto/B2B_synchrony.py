@@ -29,8 +29,8 @@ seconds = Value("i", 0)
 counts = Value("i", 0)
 
 # Time parameters
-basaltime = 315
-totaltime = 920
+basaltime = 320
+totaltime = 950
 sleeptime = 2
 
 # Sampling rate
@@ -77,20 +77,40 @@ if __name__ == "__main__":
 
     # --- Información adicional del experimento ---
     print("\n=== Información adicional del experimento ===")
-    muse_code1 = 'Muse-' + str(input("ID de Muse #1, a ser usado por el adulto (preferentemennte, 023B o 06D3): ")).upper()
-    muse_code2 = 'Muse-' + str(input("ID de Muse #2, a ser usado por el infante (preferentemennte, 070E o E215):")).upper()
-    relationship = input("Relación entre los sujetos (e.g. Padre-hijo, Madre-hijo, Amigos, Desconocidos, Pareja, etc.): ")
+    muse_code1 = (
+        "Muse-"
+        + str(
+            input(
+                "ID de Muse #1, a ser usado por el adulto (preferentemennte, 023B o 06D3): "
+            )
+        ).upper()
+    )
+    muse_code2 = (
+        "Muse-"
+        + str(
+            input(
+                "ID de Muse #2, a ser usado por el infante (preferentemennte, 070E o E215):"
+            )
+        ).upper()
+    )
+    relationship = input(
+        "Relación entre los sujetos (e.g. Padre-hijo, Madre-hijo, Amigos, Desconocidos, Pareja, etc.): "
+    )
 
     # --- Guardar metadatos en CSV como respaldo ---
 
-    metadata_df = pd.DataFrame([{
-        "session_num": session_num,
-        "repetition_num": repetition_num,
-        "muse_code1": muse_code1,
-        "muse_code2": muse_code2,
-        "relationship": relationship,
-        "datetime": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }])
+    metadata_df = pd.DataFrame(
+        [
+            {
+                "session_num": session_num,
+                "repetition_num": repetition_num,
+                "muse_code1": muse_code1,
+                "muse_code2": muse_code2,
+                "relationship": relationship,
+                "datetime": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        ]
+    )
 
     # --- Ruta base absoluta (carpeta donde está este script) ---
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -115,9 +135,13 @@ if __name__ == "__main__":
     # --- Subcarpetas de Enophones 2 ---
     for subfolder2 in ["Prepro 2", "Processed 2", "Figures 2"]:
         os.makedirs(os.path.join(folder, subfolder2), exist_ok=True)
-    
+
     metadata_df.to_csv(os.path.join(folder, "session_info.csv"), index=False)
-    print(Fore.GREEN + "Archivo 'session_info.csv' guardado con los metadatos de la sesión." + Style.RESET_ALL)
+    print(
+        Fore.GREEN
+        + "Archivo 'session_info.csv' guardado con los metadatos de la sesión."
+        + Style.RESET_ALL
+    )
 
     # # Create a multiprocessing List # #
     # This list will store the seconds where a beep was played
@@ -149,7 +173,7 @@ if __name__ == "__main__":
             eno1_datach3,
             eno1_datach4,
             totaltime,
-            muse_code1
+            muse_code1,
         ],
     )
     q2 = Process(
@@ -162,7 +186,7 @@ if __name__ == "__main__":
             eno2_datach3,
             eno2_datach4,
             totaltime,
-            muse_code2
+            muse_code2,
         ],
     )
     q3 = Process(
@@ -283,8 +307,10 @@ if __name__ == "__main__":
         if df_name2[-4:] == ".csv" and df_name2[:4] != "file":
             df_name2 = df_name2[:-4]
             # Uncomment for muse 2
-            df_raw2 = pd.read_csv("{}/Prepro 2/{}.csv".format(folder, df_name2), index_col=0).drop(["board_ts", "unix_ts"], axis=1)
-            #df_raw2 = pd.read_csv('{}/Prepro 2/{}.csv'.format(folder, df_name2), index_col=0)[['Fz', 'C3', 'Cz', 'C4']] # Synthetic only
+            df_raw2 = pd.read_csv(
+                "{}/Prepro 2/{}.csv".format(folder, df_name2), index_col=0
+            ).drop(["board_ts", "unix_ts"], axis=1)
+            # df_raw2 = pd.read_csv('{}/Prepro 2/{}.csv'.format(folder, df_name2), index_col=0)[['Fz', 'C3', 'Cz', 'C4']] # Synthetic only
             df_processed2 = remove_outliers(
                 df_raw2.apply(pd.to_numeric, errors="coerce")
                 .dropna(axis=0)
@@ -306,26 +332,42 @@ if __name__ == "__main__":
     # --- Integrar metadatos dentro del archivo final de resultados ---
     try:
         # Cargar el archivo de resultados de frecuencias (ajusta el nombre si es otro)
-        data_meanb = pd.read_csv(f'{folder}/Frequency_bands_bispectrum.csv', index_col=0)
-        data_graph = data_meanb.apply(pd.to_numeric, errors='coerce').dropna(axis=0).reset_index(drop=True)
+        data_meanb = pd.read_csv(
+            f"{folder}/Frequency_bands_bispectrum.csv", index_col=0
+        )
+        data_graph = (
+            data_meanb.apply(pd.to_numeric, errors="coerce")
+            .dropna(axis=0)
+            .reset_index(drop=True)
+        )
 
         # Crear DataFrame de metadatos
-        meta_df = pd.DataFrame({
-            "Muse_1": [muse_code1],
-            "Muse_2": [muse_code2],
-            "Relación": [relationship],
-            "Fecha": [datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
-        })
+        meta_df = pd.DataFrame(
+            {
+                "Muse_1": [muse_code1],
+                "Muse_2": [muse_code2],
+                "Relación": [relationship],
+                "Fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
+            }
+        )
 
         # Combinar ambos (metadatos + datos EEG)
         final_df = pd.concat([meta_df, data_graph], axis=1)
 
         # Guardar archivo combinado
-        final_df.to_csv(f'{folder}/Frequency_bands_bispectrum_with_metadata.csv', index=False)
-        print(Fore.GREEN + "Archivo combinado con metadatos guardado correctamente." + Style.RESET_ALL)
+        final_df.to_csv(
+            f"{folder}/Frequency_bands_bispectrum_with_metadata.csv", index=False
+        )
+        print(
+            Fore.GREEN
+            + "Archivo combinado con metadatos guardado correctamente."
+            + Style.RESET_ALL
+        )
 
     except Exception as e:
-        print(Fore.RED + f"Error al combinar metadatos con datos: {e}" + Style.RESET_ALL)
+        print(
+            Fore.RED + f"Error al combinar metadatos con datos: {e}" + Style.RESET_ALL
+        )
 
         # Create dataframes to estimate the eyes open mean matrix
 

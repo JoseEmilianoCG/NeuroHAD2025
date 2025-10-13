@@ -6,11 +6,13 @@ import sys
 # --- cross-platform kbhit/getch ---
 try:
     import msvcrt
+
     _IS_WINDOWS = True
 except ImportError:
     _IS_WINDOWS = False
 
 if _IS_WINDOWS:
+
     def kbhit():
         return msvcrt.kbhit()
 
@@ -29,6 +31,7 @@ else:
         Abre /dev/tty (independiente de sys.stdin) y pone el terminal en cbreak
         durante su vida útil, restaurándolo al salir.
         """
+
         def __init__(self):
             # Si no hay TTY, lanzará OSError
             self.fd = os.open("/dev/tty", os.O_RDONLY)
@@ -78,10 +81,10 @@ def marker_loop(csv_path, label_map=None):
     is_new = not os.path.exists(csv_path)
 
     # Prepara CSV
-    f = open(csv_path, 'a', newline='', encoding='utf-8')
+    f = open(csv_path, "a", newline="", encoding="utf-8")
     w = csv.writer(f)
     if is_new:
-        w.writerow(['unix_ts', 'key', 'label'])
+        w.writerow(["unix_ts", "key", "label"])
         f.flush()
 
     try:

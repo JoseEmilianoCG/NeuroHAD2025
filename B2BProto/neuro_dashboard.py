@@ -201,7 +201,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                 ),
                 angularaxis=dict(
                     gridcolor=PALETTE["grid"],
-                    tickfont=dict(size=25),
+                    tickfont=dict(size=22),
                     # tickpadding=12,  # separación de la circunferencia
                     rotation=90,
                     gridwidth=1.4,
@@ -240,7 +240,12 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
         children=[
             html.Div(
                 title,
-                style={"fontWeight": 400, "fontSize": "4vh", "color": PALETTE["text"], "text-align":"center"},
+                style={
+                    "fontWeight": 400,
+                    "fontSize": "4vh",
+                    "color": PALETTE["text"],
+                    "text-align": "center",
+                },
             ),
             # El grid ahora ocupa toda la altura restante del viewport
             html.Div(
@@ -277,7 +282,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                                     "color": PALETTE["subtext"],
                                     "fontSize": "4vh",
                                     "fontWeight": "100",
-                                    "text-align": "center"
+                                    "text-align": "center",
                                 },
                             ),
                             html.Div(
@@ -337,7 +342,7 @@ def run_dash(q, port=8051, window_sec=120, offset=0.8, title="Neuro Live", xmin=
                                     "color": PALETTE["subtext"],
                                     "fontSize": "4vh",
                                     "fontWeight": "100",
-                                    "text-align": "center"
+                                    "text-align": "center",
                                 },
                             ),
                             dcc.Graph(
