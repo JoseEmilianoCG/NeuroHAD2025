@@ -308,7 +308,7 @@ def bispec(
             if ref_taken:
                 bands_order = ["Delta", "Theta", "Alpha", "Beta", "Gamma"]
 
-                scaled_bispec_df = sigmoid_scale_df(result_df, bispectrum_ref_df, k=1)
+                scaled_bispec_df = sigmoid_scale_df(result_df, bispectrum_ref_df, k=1.5)
 
                 # Promediar por banda
                 band_means = {}
@@ -344,7 +344,7 @@ def bispec(
                     }
                 )
                 scaled_metrics_df = sigmoid_scale_df(
-                    metrics_result_df, metrics_ref_df, k=1
+                    metrics_result_df, metrics_ref_df, k=1.5
                 )
 
                 # asym1s = scalers['Asym1'].transform([[asym1]])[0][0]
@@ -357,7 +357,6 @@ def bispec(
                 # act2s = scalers['Act1'].transform([[act2]])[0][0]
                 # inv1s = scalers['Inv1'].transform([[inv1]])[0][0]
                 # inv2s = scalers['Inv2'].transform([[inv2]])[0][0]
-
                 radardict = {
                     "Adulto": {
                         "Atención": scaled_metrics_df["Att1"],
@@ -381,11 +380,24 @@ def bispec(
                     "Beta": final_df["Beta"],
                     "Gamma": final_df["Gamma"],
                 }
+
                 push(
                     dash_q,
                     sec,
                     series_dict=series,
                     radars=radardict,
+                )
+
+                featmat_df = pd.DataFrame(
+                    np.array([final_df.mean(axis=1), scaled_metrics_df["Att1"], ]), columns=["SincroniaMedia"]
+                )
+                featmat_df.to_csv(
+                    "{}/MeanSynchronyHistoric.csv".format(folder),
+                    mode="a",
+                    header=not os.path.exists(
+                        "{}/MeanSynchronyHistoric.csv".format(folder)
+                    ),
+                    index=False,
                 )
 
                 # Si algún día quieres mandar 2 puntos cada 4 s:
@@ -411,7 +423,8 @@ def bispec(
 
             # matrix = pd.DataFrame(arrange3).transpose()
             result_df.to_csv(
-                "{}/Frequency_bands_bispectrum.csv".format(folder), mode="a"
+                "{}/Frequency_bands_bispectrum.csv".format(folder),
+                mode="a",
             )
 
             print(result_df)

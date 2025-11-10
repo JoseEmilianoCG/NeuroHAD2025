@@ -2,7 +2,7 @@ from EGG_device1 import EEG
 from EGG_device2 import EEG2
 from bispectrum import bispec
 from timer import timer
-from markers import marker_loop
+from markers import run_with_window
 from neuro_dashboard import run_dash, push, shutdown
 
 # Imports for P300
@@ -29,8 +29,6 @@ seconds = Value("i", 0)
 counts = Value("i", 0)
 
 # Time parameters
-basaltime = 300
-totaltime = 930
 sleeptime = 2
 
 # Sampling rate
@@ -74,12 +72,30 @@ if __name__ == "__main__":
     ).split(" ")
     session_num = f"{int(session_num):02d}"
     repetition_num = f"{int(repetition_num):02d}"
+    basaltime = int(input("Introduce el tiempo de baseline en segundos: "))
+    totaltime = int(input("Introduce el tiempo total de la sesión en segundos: "))
 
     # --- Información adicional del experimento ---
     print("\n=== Información adicional del experimento ===")
-    muse_code1 = 'Muse-' + str(input("ID de Muse #1, a ser usado por el adulto (preferentemennte, 023B o 06D3): ")).upper()
-    muse_code2 = 'Muse-' + str(input("ID de Muse #2, a ser usado por el infante (preferentemennte, 070E o E215): ")).upper()
-    relationship = input("Relación entre los sujetos (e.g. Padre-hijo, Madre-hijo, Amigos, Desconocidos, Pareja, etc.): ")
+    muse_code1 = (
+        "Muse-"
+        + str(
+            input(
+                "ID de Muse #1, a ser usado por el adulto (preferentemennte, 023B o 06D3): "
+            )
+        ).upper()
+    )
+    muse_code2 = (
+        "Muse-"
+        + str(
+            input(
+                "ID de Muse #2, a ser usado por el infante (preferentemennte, 070E o E215): "
+            )
+        ).upper()
+    )
+    relationship = input(
+        "Relación entre los sujetos (e.g. Padre-hijo, Madre-hijo, Amigos, Desconocidos, Pareja, etc.): "
+    )
 
     # --- Guardar metadatos en CSV como respaldo ---
 
@@ -193,7 +209,7 @@ if __name__ == "__main__":
         ],
     )
     q4 = Process(
-        target=marker_loop, args=(f"{folder}/markers.csv", labels), daemon=True
+        target=run_with_window, args=(f"{folder}/markers.csv", labels), daemon=True
     )
 
     # process2.start()71
@@ -270,9 +286,12 @@ if __name__ == "__main__":
     for df_name in os.listdir("{}/Prepro/".format(folder)):
         if df_name[-4:] == ".csv" and df_name[:4] != "file":
             df_name = df_name[:-4]
+            # df_raw = pd.read_csv(
+            #     "{}/Prepro/{}.csv".format(folder, df_name), index_col=0
+            # ).drop(["board_ts", "unix_ts"], axis=1)
             df_raw = pd.read_csv(
                 "{}/Prepro/{}.csv".format(folder, df_name), index_col=0
-            ).drop(["board_ts", "unix_ts"], axis=1)
+            )[["Fz", "C3", "Cz", "C4"]]
             df_processed = remove_outliers(
                 df_raw.apply(pd.to_numeric, errors="coerce")
                 .dropna(axis=0)
@@ -291,10 +310,10 @@ if __name__ == "__main__":
         if df_name2[-4:] == ".csv" and df_name2[:4] != "file":
             df_name2 = df_name2[:-4]
             # Uncomment for muse 2
+            # df_raw2 = pd.read_csv("{}/Prepro 2/{}.csv".format(folder, df_name2), index_col=0).drop(["board_ts", "unix_ts"], axis=1)
             df_raw2 = pd.read_csv(
                 "{}/Prepro 2/{}.csv".format(folder, df_name2), index_col=0
-            ).drop(["board_ts", "unix_ts"], axis=1)
-            # df_raw2 = pd.read_csv('{}/Prepro 2/{}.csv'.format(folder, df_name2), index_col=0)[['Fz', 'C3', 'Cz', 'C4']] # Synthetic only
+            )[["Fz", "C3", "Cz", "C4"]]  # Synthetic only
             df_processed2 = remove_outliers(
                 df_raw2.apply(pd.to_numeric, errors="coerce")
                 .dropna(axis=0)
