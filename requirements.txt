@@ -7,3 +7,6 @@ scipy
 scikit-learn
 plotly
 dash
+pybispectra
+mne
+mne-connectivity

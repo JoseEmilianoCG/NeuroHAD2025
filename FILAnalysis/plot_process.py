@@ -5,18 +5,18 @@ import matplotlib.pyplot as plt
 # =============== CONFIGURA AQUÍ LO QUE QUIERES VER ===============
 
 # Sujeto (carpeta dentro de Rawdata)
-SESSION = "S5R1"      # Ejemplos: "S1R1", "S2R2", "S5R1", "S10R1", etc.
+SESSION = "S48R2"      # Ejemplos: "S1R1", "S2R2", "S5R1", "S10R1", etc.
 
 # Persona / derivación
-PERSON = "p1"          # "p1" o "p2"
+PERSON = "p2"          # "p1" o "p2"
 
 # Fase:
 #   "baseline", "shared", "individual"
 #   o "filtrado_completo" para ver toda la señal filtrada
-PHASE = "baseline"
+PHASE = "individual"
 
 # Canal EEG a graficar
-CHANNEL = "TP10"       # "TP9", "AF7", "AF8", "TP10"
+CHANNEL = "AF8"       # "TP9", "AF7", "AF8", "TP10"
 
 # Ventana de muestras a mostrar (opcional)
 #   Dejar en None para ver toda la señal
