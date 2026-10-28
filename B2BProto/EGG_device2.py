@@ -32,12 +32,12 @@ def EEG2(
 
     # MAC Adress is the only required parameters for ENOPHONEs
     # params.mac_address = 'f4:0e:11:75:75:ce'
-    # params.serial_number = muse_id #'Muse-E215'#'Muse-070E'##'
+    params.serial_number = muse_id #'Muse-E215'#'Muse-070E'##'
 
     # Relevant board IDs available:
     # board_id = BoardIds.ENOPHONE_BOARD.value # (37)
-    board_id = BoardIds.SYNTHETIC_BOARD.value
-    # board_id = BoardIds.MUSE_2_BOARD.value # (-1)
+    # board_id = BoardIds.SYNTHETIC_BOARD.value
+    board_id = BoardIds.MUSE_2_BOARD.value  # (-1)
     # board_id = BoardIds.CYTON_BOARD.value # (0)
 
     # Relevant variables are obtained from the current EEG.
@@ -61,7 +61,7 @@ def EEG2(
 
     try:
         while True:
-            time.sleep(4)
+            time.sleep(2)
             t_pull = time.time()
             data = board.get_board_data()  # get latest 256 packages or less, doesn't remove them from internal buffer.
 

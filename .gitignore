@@ -184,3 +184,5 @@ Outputs
 RealtimeProto
 Rawdata
 Figures
+
+*.joblib

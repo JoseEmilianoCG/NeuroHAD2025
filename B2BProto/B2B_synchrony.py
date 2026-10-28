@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # The name of the folder is defined depending on the user's input
     # --- Solicitud de sujeto y repetición ---
     session_num, repetition_num = input(
-        "Introduce en número de sesión y repetición, separa con un espacio: "
+        "Introduce el número de sesión y repetición, separa con un espacio: "
     ).split(" ")
     session_num = f"{int(session_num):02d}"
     repetition_num = f"{int(repetition_num):02d}"
@@ -286,12 +286,12 @@ if __name__ == "__main__":
     for df_name in os.listdir("{}/Prepro/".format(folder)):
         if df_name[-4:] == ".csv" and df_name[:4] != "file":
             df_name = df_name[:-4]
-            # df_raw = pd.read_csv(
-            #     "{}/Prepro/{}.csv".format(folder, df_name), index_col=0
-            # ).drop(["board_ts", "unix_ts"], axis=1)
             df_raw = pd.read_csv(
                 "{}/Prepro/{}.csv".format(folder, df_name), index_col=0
-            )[["Fz", "C3", "Cz", "C4"]]
+            ).drop(["board_ts", "unix_ts"], axis=1)
+            # df_raw = pd.read_csv(
+            #     "{}/Prepro/{}.csv".format(folder, df_name), index_col=0
+            # )[["Fz", "C3", "Cz", "C4"]]
             df_processed = remove_outliers(
                 df_raw.apply(pd.to_numeric, errors="coerce")
                 .dropna(axis=0)
@@ -310,10 +310,10 @@ if __name__ == "__main__":
         if df_name2[-4:] == ".csv" and df_name2[:4] != "file":
             df_name2 = df_name2[:-4]
             # Uncomment for muse 2
-            # df_raw2 = pd.read_csv("{}/Prepro 2/{}.csv".format(folder, df_name2), index_col=0).drop(["board_ts", "unix_ts"], axis=1)
-            df_raw2 = pd.read_csv(
-                "{}/Prepro 2/{}.csv".format(folder, df_name2), index_col=0
-            )[["Fz", "C3", "Cz", "C4"]]  # Synthetic only
+            df_raw2 = pd.read_csv("{}/Prepro 2/{}.csv".format(folder, df_name2), index_col=0).drop(["board_ts", "unix_ts"], axis=1)
+            # df_raw2 = pd.read_csv(
+            #     "{}/Prepro 2/{}.csv".format(folder, df_name2), index_col=0
+            # )[["Fz", "C3", "Cz", "C4"]]  # Synthetic only
             df_processed2 = remove_outliers(
                 df_raw2.apply(pd.to_numeric, errors="coerce")
                 .dropna(axis=0)
